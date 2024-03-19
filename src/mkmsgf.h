@@ -39,6 +39,7 @@
 #define MKMSGF_H
 
 #include <stdint.h>
+#include <dlist.h>
 
 /* Basic msg file layout:
 
@@ -59,7 +60,7 @@
 typedef struct _MSGHEADER
 {
     uint8_t magic_sig[8];  // Magic word signature
-    uint8_t identifier[3]; // Identifier (SYS, DOS, NET, etc.)
+    uint8_t identifier[4]; // Identifier (SYS, DOS, NET, etc.)
     uint16_t numbermsg;    // Number of messages
     uint16_t firstmsg;     // Number of the first message
     int8_t offset16bit;    // Index table index uint16 == 1 or uint32 == 0
@@ -86,7 +87,7 @@ typedef struct _FILECOUNTRYINFO
 // extended header block
 typedef struct _EXTHDR
 {
-    uint16_t hdrlen;    // length of ???
+    uint16_t hdrlen;    // length of FILECOUNTRYINFO block
     uint16_t numblocks; // number of additional FILECOUNTRYINFO blocks
 } EXTHDR, *PEXTHDR;
 
@@ -135,7 +136,7 @@ struct suppinfo langinfo[] = {
     {"PTG", 22, 2, "Portuguese", "Portugal"},
     {"RMS", 23, 1, "Rhaeto-Romanic", "Switzerland"},
     {"ROM", 24, 1, "Romanian", "Romania"},
-    {"RUS", 25, 1, "Russian", "Russian"},
+    {"RUS", 25, 1, "Russian", "Russia"},
     {"SHL", 26, 1, "Croato-Serbian", "Yugoslavia"},
     {"SHC", 26, 2, "Serbo-Croatian", "Yugoslavia"},
     {"SKY", 27, 1, "Slovakian", "Czechoslovakia"},
@@ -160,8 +161,10 @@ typedef struct _MESSAGEINFO
     char indir[_MAX_DIR];
     char infname[_MAX_FNAME];
     char inext[_MAX_EXT];
-
     char outfile[_MAX_PATH]; // output filename
+    char *include;				// include paths
+    uint8_t asm_format_output; // 1= include is ASM INC
+    uint8_t c_format_output; // 1= include is C H
 
     uint8_t verbose; // how much to see?
     // compile/decompile info
@@ -181,7 +184,7 @@ typedef struct _MESSAGEINFO
     uint16_t codepagesnumber;    // Number of codepages
     uint16_t codepages[16];      // Codepages list (Max 16)
     uint8_t filename[_MAX_PATH]; // Name of file
-    uint16_t extlength;          // length of ???
+    uint16_t extlength;          // length of FILECOUNTRYINFO block
     uint16_t extnumblocks;       // number of additional sub FILECOUNTRYINFO blocks
     fpos_t indexoffset;          // okay dup of hdroffset
     uint16_t indexsize;          // size in bytes of index
@@ -191,6 +194,7 @@ typedef struct _MESSAGEINFO
     uint8_t langfamilyIDcode;    // Save array position for easy lookup
     uint8_t fakeextend;          // Append a fake extended header
     uint8_t fixlastline;         // Try and fix last line issues
+	DLIST msgids;				// Message IDs constants from include files
 } MESSAGEINFO;
 
 // mkmsgf header signature - a valid MSG file alway starts with
@@ -198,5 +202,7 @@ typedef struct _MESSAGEINFO
 char signature[] = {0xFF, 0x4D, 0x4B, 0x4D, 0x53, 0x47, 0x46, 0x00};
 
 char extfake[] = {0x2E, 0x01, 0x00, 0x00};
+
+#define ASM_MSG_SIZE 16
 
 #endif
